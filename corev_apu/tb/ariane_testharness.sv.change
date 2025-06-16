@@ -576,7 +576,7 @@ module ariane_testharness #(
   // Peripherals
   // ---------------
   logic tx, rx;
-  logic [1:0] irqs;
+  logic [3:0] irqs;
 
   ariane_peripherals #(
     .AxiAddrWidth ( AXI_ADDRESS_WIDTH            ),
@@ -589,7 +589,8 @@ module ariane_testharness #(
     .InclUART     ( 1'b0                     ),
 `endif
     .InclSPI      ( 1'b0                     ),
-    .InclEthernet ( 1'b0                     )
+    .InclEthernet ( 1'b0                     ),
+    .InclGPIO     ( 1'b1                     )
   ) i_ariane_peripherals (
     .clk_i     ( clk_i                        ),
     .rst_ni    ( ndmreset_n                   ),
@@ -848,20 +849,52 @@ module ariane_testharness #(
   );
 `endif
 
-initial begin
-  // Wait for bootloader to fully configure PLIC and enable interrupts
-  #2000;  // safer than #1000
-  force i_ariane_peripherals.irq_sources[7] = 1'b1;
-  #1000;  // Hold it high for 1000 ns = 100 clock cycles (assuming 10 ns clock)
-  force i_ariane_peripherals.irq_sources[7] = 1'b0;
+//Lines Added
+
+logic [31:0] cycle_counter = 0;
+
+always_ff @(posedge clk_i or negedge rst_ni) begin
+  if (!rst_ni) begin
+    cycle_counter <= 0;
+    irqs[3] <= 1'b0;
+  end else begin
+    cycle_counter <= cycle_counter + 1;
+
+    // Trigger interrupt at cycle 1000
+    if (cycle_counter == 1000) begin
+      irqs[3] <= 1'b1;
+    end
+
+    // Deassert interrupt at cycle 1010
+    if (cycle_counter == 1010) begin
+      irqs[3] <= 1'b0;
+    end
+  end
 end
 
 initial begin
-  $dumpfile("ariane_wave.vcd");  // name of the waveform output
-  $dumpvars(0, u_peripherals);                     // dump all signals inside peripherals
-  $dumpvars(0, u_peripherals.i_plic);              // dump all inside plic
-  $dumpvars(0, u_peripherals.i_plic.i_rv_plic_gateway); // gateway signals
-  $dumpvars(0, u_ariane);                          // dump all inside core
-end
+  rx = 1;
+ // wait (rst_ni == 1);
 
+  irq_sources = '0;
+  //wait (rst_ni == 1);  // Wait until reset is released
+
+  #10000;
+
+
+  rx = 0; #8680;
+  rx = 1; #8680; // Bit 0
+  #10000;
+  irq_sources[3] = 1'b1;
+  #100;
+  irq_sources[3] = 1'b0;
+  rx = 0; #8680;
+  rx = 1; #8680;
+  rx = 0; #8680;
+  rx = 1; #8680;
+  rx = 0; #8680;
+  rx = 1; #8680; // Bit 7
+  rx = 1; #8680; // Stop bit
+end*/
+//Lines Ended
 endmodule

@@ -847,21 +847,40 @@ module ariane_testharness #(
     .CSYSACK('0)
   );
 `endif
+//Lines Added
+//  initial begin
+    // Wait some cycles for system to initialize
+//    repeat (1000) @(posedge clk_i);
 
-initial begin
-  // Wait for bootloader to fully configure PLIC and enable interrupts
-  #2000;  // safer than #1000
-  force i_ariane_peripherals.irq_sources[7] = 1'b1;
-  #1000;  // Hold it high for 1000 ns = 100 clock cycles (assuming 10 ns clock)
-  force i_ariane_peripherals.irq_sources[7] = 1'b0;
-end
+    // Trigger external interrupt 1
+ //   irqs[1] = 1'b1;
+//    $display(">> Triggering external interrupt (irqs[1])");
 
-initial begin
-  $dumpfile("ariane_wave.vcd");  // name of the waveform output
-  $dumpvars(0, u_peripherals);                     // dump all signals inside peripherals
-  $dumpvars(0, u_peripherals.i_plic);              // dump all inside plic
-  $dumpvars(0, u_peripherals.i_plic.i_rv_plic_gateway); // gateway signals
-  $dumpvars(0, u_ariane);                          // dump all inside core
-end
+    // Hold high for a few cycles
+//    repeat (10) @(posedge clk_i);
+//    irqs[1] = 1'b0;
+//  end
 
+ // logic [31:0] irq_counter = 0;
+ // logic        irq_fired = 0;
+
+ // always_ff @(posedge clk_i) begin
+//    if (!ndmreset_n) begin
+  //    irq_counter <= 0;
+  //    irq_fired <= 0;
+  //    i_ariane_peripherals.irq_sources[2] <= 1'b0;
+  //  end else if (!irq_fired) begin
+  //    irq_counter <= irq_counter + 1;
+  //    if (irq_counter == 1000) begin
+  //      i_ariane_peripherals.irq_sources[2] <= 1'b1;
+  //      $display(">> External IRQ triggered (irq_sources[2])");
+  //    end
+  //    if (irq_counter == 1010) begin
+  //      i_ariane_peripherals.irq_sources[2] <= 1'b0;
+  //      irq_fired <= 1;
+  //    end
+  //  end
+  //end
+
+//Lines Ended
 endmodule

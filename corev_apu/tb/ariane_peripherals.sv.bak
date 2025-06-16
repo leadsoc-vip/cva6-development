@@ -60,24 +60,8 @@ module ariane_peripherals #(
     logic [ariane_soc::NumSources-1:0] irq_sources;
 
     // Unused interrupt sources
-    // LINECHANGED
-    logic [31:0] cycle_counter=0;
-    
-always_ff @(posedge clk_i or negedge rst_ni) begin
-  if (!rst_ni) begin
-    cycle_counter   <= 32'd0;
-    irq_sources  <= '0;
-  end else begin
-    cycle_counter <= cycle_counter + 1;
+    assign irq_sources[ariane_soc::NumSources-1:7] = '0;
 
-    if (cycle_counter == 1000)begin
-      irq_sources[7] <= 1'b1;  // Raise interrupt
-      end else if (cycle_counter == 1650) begin
-      irq_sources[7] <= 1'b0;  // Lower it
-  end
-end
-end
-    //LLINECHANGED
     REG_BUS #(
         .ADDR_WIDTH ( 32 ),
         .DATA_WIDTH ( 32 )
@@ -181,8 +165,7 @@ end
     `REG_BUS_ASSIGN_TO_REQ(plic_req, reg_bus)
     `REG_BUS_ASSIGN_FROM_RSP(reg_bus, plic_rsp)
 
-  
-   plic_top #(
+    plic_top #(
       .N_SOURCE    ( ariane_soc::NumSources  ),
       .N_TARGET    ( ariane_soc::NumTargets  ),
       .MAX_PRIO    ( ariane_soc::MaxPriority ),
@@ -193,7 +176,7 @@ end
       .rst_ni,
       .req_i         ( plic_req    ),
       .resp_o        ( plic_rsp    ),
-      .le_i          ( {30{1'b0}} | (1'b1 << 7)  ), // 0:level 1:edge
+      .le_i          ( '0          ), // 0:level 1:edge
       .irq_sources_i ( irq_sources ),
       .eip_targets_o ( irq_o       )
     );

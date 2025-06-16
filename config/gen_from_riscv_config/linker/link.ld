@@ -63,6 +63,12 @@ SECTIONS
     *(.tbss)
     _tbss_end = .;
   }
-
+  /* Add the stack section before defining _end */
+  . = ALIGN(0x1000);
+  .stack : {
+    _stack_bottom = .;
+    . = . + 0x1000;   /* 4 KB stack */
+    _stack_top = .;
+  }
   _end = .;
 }
